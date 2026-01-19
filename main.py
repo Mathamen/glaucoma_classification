@@ -106,7 +106,7 @@ weights = compute_class_weight(
 )
 
 class_weight = {i: weights[i] for i in range(len(weights))}
-
+print("Class weights:", class_weight)
 
 
 
@@ -176,6 +176,10 @@ callbacks = [
 
 
 
+
+print("\n" + "="*50)
+print("STAGE 1: Training with frozen base")
+print("="*50 + "\n")
 history1 = model.fit(
     train_ds,
     validation_data=val_ds,
@@ -183,6 +187,8 @@ history1 = model.fit(
     class_weight=class_weight,
     callbacks=callbacks
 )
+print("Stage 1 training complete.")
+print("Final training metrics (Stage 1):", history1.history)
 
 
 
@@ -205,6 +211,10 @@ model.compile(
     ]
 )
 
+
+print("\n" + "="*50)
+print("STAGE 2: Fine-tuning top layers")
+print("="*50 + "\n")
 history2 = model.fit(
     train_ds,
     validation_data=val_ds,
@@ -212,6 +222,8 @@ history2 = model.fit(
     class_weight=class_weight,
     callbacks=callbacks
 )
+print("Stage 2 training complete.")
+print("Final training metrics (Stage 2):", history2.history)
 
 
 
@@ -232,6 +244,10 @@ model.compile(
     ]
 )
 
+
+print("\n" + "="*50)
+print("STAGE 3: Full model fine-tuning")
+print("="*50 + "\n")
 history3 = model.fit(
     train_ds,
     validation_data=val_ds,
@@ -239,6 +255,8 @@ history3 = model.fit(
     class_weight=class_weight,
     callbacks=callbacks
 )
+print("Stage 3 training complete.")
+print("Final training metrics (Stage 3):", history3.history)
 
 
 
@@ -264,6 +282,19 @@ def tta_predict(model, dataset, num_augmentations=5):
 
 
 
+
+print("\n" + "="*50)
+print("Evaluating with Test-Time Augmentation...")
+print("="*50 + "\n")
 loss, acc, auc, precision, recall = model.evaluate(test_ds)
+print(f"\nStandard Test Results:")
+print(f"  Accuracy:  {acc:.4f}")
+print(f"  AUC:       {auc:.4f}")
+print(f"  Precision: {precision:.4f}")
+print(f"  Recall:    {recall:.4f}")
+if precision + recall > 0:
+    print(f"  F1-Score:  {2 * (precision * recall) / (precision + recall):.4f}")
+else:
+    print("  F1-Score:  Undefined (precision + recall = 0)")
 
 model.save("glaucoma_model_final.h5")
